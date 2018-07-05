@@ -2,6 +2,7 @@
 
 # 作者: 谢科，2018.4
 # 功能:将采集的虚拟机数据整理发往zabbix_server，同时根据虚拟机生存情况相应的更新到zabbix的主机
+# 使用:代码需要放置在ceilometer/dispatcher目录下，同时修改相应配置文件，此服务随ceilometer.collector服务一起启动
 # 测试环境:python2.7 ,
 #          zabbix3.2,
 #          py-zabbix 可直接通过 pip install py-zabbix 安装
@@ -23,15 +24,17 @@ from pyzabbix import ZabbixMetric, ZabbixSender, ZabbixAPI
 LOG = log.getLogger(__name__)
 
 cfg.CONF(default_config_files=['/etc/ceilometer/ceilometer.conf'])
+
+# 为了减少zabbix服务器压力，我们用了代理服务器来接收数据，如果没有用到代理服务器的话，不需要配置
 zabbix_dispatcher_opts = [
     cfg.StrOpt('server',
                default='http://120.132.125.50:10086/index.php',
                help='zabbix_server address'),
     cfg.StrOpt('user',
-               default = '张佳元',
+               default = 'xxx',
                help = 'zabbix login user'),
     cfg.StrOpt('password',
-               default = '234sdf',
+               default = 'xxx',
                help = 'zabbix login password'),
     cfg.StrOpt('delete_pollsters',
                default = '',
@@ -41,7 +44,7 @@ zabbix_dispatcher_opts = [
                help = 'host in zabbix should bind to a template,it contains monitoring items, graphs, '
                       'triggers'),
     cfg.StrOpt('host_group_name',
-               default = 'cloud_FuJian',
+               default = 'xxx',
                help = 'which host_group that vm should belong to, generally, vm in a OpenStack should be in'
                       'a same group'),
     cfg.StrOpt('add_pollsters',
@@ -49,11 +52,11 @@ zabbix_dispatcher_opts = [
                help = 'pollsters need to be added'),
     cfg.StrOpt('agent_server',
                default = '112.49.26.136',
-               help = 'fu_jian_yun, use proxy to receive data'
+               help = 'agent_server address'
                ),
     cfg.StrOpt('agent_proxy',
                default = '',
-               help = '')
+               help = 'agent_proxy name set in zabbix')
 ]
 cfg.CONF.register_opts(zabbix_dispatcher_opts, group="zabbix")
 
@@ -382,7 +385,7 @@ class ZabbixDispatcher(dispatcher.MeterDispatcherBase):
                     self.zabbix_handler.host_delete(host)
                     LOG.info('Not found vm %s in OpenStack, Delete it' % nova_vm_id_list[host].name)
         except KeyError:
-            # 没搞明白为什么会触发这个，信息呢只有一个host_id
+            # 没搞明白为什么会触发这个，信息呢只有一个host_id，运行中也没有影响到功能的正常实现。
             # 重现方法：1.删除几台虚拟机 2.打印异常情况。
             pass
         except Exception as err:
