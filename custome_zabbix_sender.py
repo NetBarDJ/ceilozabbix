@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-# add by xieke 2018.6 for sending vm_data to zabbix
-# 主要实现方法是通过ceilometer暴露的restful接口
 
+# 作者: 谢科 2018.5
+# 功能：定时将云平台中所有虚拟机的统计信息发往zabbix，同时设计一个可供拓展的接口方便后续与Ceilometer API交互
+#      此文件放置在/ceilometer目录下
 import datetime
 import requests
 import json
@@ -16,11 +17,10 @@ from oslo_log import log
 from ceilometer import utils
 from pyzabbix import ZabbixMetric, ZabbixSender
 
-#cfg.CONF(default_config_files=['/etc/ceilometer/ceilometer.conf'])
 zabbix_dispatcher_opts = [
     cfg.StrOpt('agent_server',
                default = '10.100.10.20',
-               help = 'fu_jian_yun, use proxy to receive data'
+               help = 'use proxy to receive data'
                ),
     cfg.IntOpt('interval',
                default = 86400,  # unit:S
@@ -30,10 +30,10 @@ zabbix_dispatcher_opts = [
                default = 'admin',
                help = ''),
     cfg.StrOpt('keystone_pwd',
-               default = 'd48f9d20cf524af862cd',
+               default = 'xxx',
                help = ''),
     cfg.StrOpt('host_name',
-               default = 'fujian_statistics',
+               default = 'xxx',
                help = 'host_name in zabbix server used to collect data')
 ]
 cfg.CONF.register_opts(zabbix_dispatcher_opts, group="zabbix")
